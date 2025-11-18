@@ -1,32 +1,23 @@
-// Zylo-Hub Key Verification API
+async function validateKey(key) {
+    const response = await fetch("https://raw.githubusercontent.com/TitaniumHQSscripts/Zylo-Hub/main/keys.txt");
+    const text = await response.text();
 
-async function handleVerify() {
-    const params = new URLSearchParams(window.location.search);
-    const key = params.get("key");
+    const keys = text.split("\n").map(k => k.trim());
 
-    if (!key) {
-        return respond({ success: false, message: "No key provided." });
-    }
-
-    try {
-        const response = await fetch("https://raw.githubusercontent.com/TitaniumHQSscripts/Zylo-Hub/main/keys.txt");
-        const text = await response.text();
-
-        const keys = text.split(/\r?\n/).map(k => k.trim()).filter(k => k.length > 0);
-
-        if (keys.includes(key)) {
-            respond({ success: true, message: "Key valid." });
-        } else {
-            respond({ success: false, message: "Key invalid." });
-        }
-
-    } catch (err) {
-        respond({ success: false, message: "Server error." });
+    if (keys.includes(key.trim())) {
+        return { success: true, message: "Valid key" };
+    } else {
+        return { success: false, message: "Invalid key" };
     }
 }
 
-function respond(obj) {
-    document.body.innerHTML = "<pre>" + JSON.stringify(obj, null, 4) + "</pre>";
-}
+// API endpoint (GitHub Pages friendly)
+const url = new URL(window.location.href);
+const key = url.searchParams.get("key");
 
-handleVerify();
+validateKey(key).then(result => {
+    document.body.innerHTML = `
+        <h1>${result.success ? "✔️ VALID KEY" : "❌ INVALID KEY"}</h1>
+        <p>${result.message}</p>
+    `;
+});
